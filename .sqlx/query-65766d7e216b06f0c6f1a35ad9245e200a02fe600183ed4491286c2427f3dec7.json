@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT \n                    c.id, \n                    c.title, \n                    c.description, \n                    c.created_at, \n                    c.updated_at, \n                    c.owner_id,\n                    c.mode as \"mode: ContextMode\",\n                    (SELECT COUNT(*) FROM context_files cf WHERE cf.context_id = c.id) as \"files_count?\"\n                FROM contexts c\n                WHERE ($2::UUID IS NULL OR c.owner_id = $2)\n                ORDER BY c.created_at DESC, c.id DESC\n                LIMIT $1\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "mode: ContextMode",
+        "type_info": {
+          "Custom": {
+            "name": "context_mode",
+            "kind": {
+              "Enum": [
+                "emb",
+                "rdf",
+                "lpg"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "files_count?",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "65766d7e216b06f0c6f1a35ad9245e200a02fe600183ed4491286c2427f3dec7"
+}

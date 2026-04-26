@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO context_files (\n                context_id,\n                file_id,\n                pipeline_id,\n                origin,\n                original_name,\n                original_path,\n                media_type\n            )\n            VALUES ($1, $2, $3, $4::file_origin, $5, $6, $7)\n            ON CONFLICT (context_id, file_id) DO NOTHING\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int8",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "file_origin",
+            "kind": {
+              "Enum": [
+                "upload",
+                "archive_entry"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1797d8afd5156cea0711a7f1e672bbc7c9489170bbfec600cd320caf9e1ee5e3"
+}

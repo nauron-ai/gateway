@@ -1,0 +1,87 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO contexts (owner_id, mode)\n            VALUES ($1, $2)\n            RETURNING id, title, description, created_at, updated_at, owner_id, mode as \"mode: ContextMode\", 0::bigint as \"files_count\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "mode: ContextMode",
+        "type_info": {
+          "Custom": {
+            "name": "context_mode",
+            "kind": {
+              "Enum": [
+                "emb",
+                "rdf",
+                "lpg"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "files_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "context_mode",
+            "kind": {
+              "Enum": [
+                "emb",
+                "rdf",
+                "lpg"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "23b6149b14f8c363a75d9baf840c31caf332a94db04e8f377b3043e6626be756"
+}

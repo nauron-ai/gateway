@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                status as \"status: JobStatus\",\n                COUNT(*)::bigint as \"count!\"\n            FROM jobs\n            WHERE context_id = $1\n            GROUP BY status\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status: JobStatus",
+        "type_info": {
+          "Custom": {
+            "name": "job_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "in_progress",
+                "success",
+                "failure",
+                "retryable",
+                "retired"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "505aa256ab915033faf8fa58d65dbca09c1aca292d173c0cc34045d25139a173"
+}

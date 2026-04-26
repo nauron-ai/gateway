@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE files\n            SET status = 'pending'::file_status,\n                mir_job_id = NULL,\n                updated_at = now()\n            WHERE id = $1\n            RETURNING\n                id,\n                doc_id,\n                sha256,\n                size_bytes,\n                mime,\n                storage_bucket,\n                storage_key,\n                status as \"status: FileStatus\",\n                mir_job_id,\n                mir_artifact_uri,\n                mir_artifact_sha256,\n                mir_processed_at,\n                created_at,\n                updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "doc_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "sha256",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 3,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "mime",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "storage_bucket",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "status: FileStatus",
+        "type_info": {
+          "Custom": {
+            "name": "file_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "processing",
+                "success",
+                "failure"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "mir_job_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "mir_artifact_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "mir_artifact_sha256",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 11,
+        "name": "mir_processed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "0cbde2d709cdf0a1f5dc14939f162b9d8074b78f2274555517444391d9334707"
+}

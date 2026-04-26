@@ -1,0 +1,116 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                cf.id,\n                cf.context_id,\n                cf.file_id,\n                cf.pipeline_id,\n                cf.origin as \"origin: FileOrigin\",\n                cf.original_name,\n                cf.original_path,\n                cf.media_type,\n                cf.attached_at,\n                f.sha256 as file_sha256,\n                f.status as \"file_status: FileStatus\",\n                f.mir_artifact_uri,\n                f.doc_id as \"doc_id?\"\n            FROM context_files cf\n            INNER JOIN files f ON f.id = cf.file_id\n            WHERE cf.id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "context_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "file_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "pipeline_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "origin: FileOrigin",
+        "type_info": {
+          "Custom": {
+            "name": "file_origin",
+            "kind": {
+              "Enum": [
+                "upload",
+                "archive_entry"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "original_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "original_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "media_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "attached_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "file_sha256",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 10,
+        "name": "file_status: FileStatus",
+        "type_info": {
+          "Custom": {
+            "name": "file_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "processing",
+                "success",
+                "failure"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "mir_artifact_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "doc_id?",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "7aa7a78272503a7029d084b7bfb31d236c265d7f10b48bc1aeb3607d08bd0351"
+}

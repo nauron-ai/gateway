@@ -1,0 +1,105 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                f.id AS file_id,\n                f.sha256,\n                f.size_bytes,\n                f.status as \"status: FileStatus\",\n                f.mir_job_id,\n                f.mir_artifact_uri,\n                f.created_at,\n                f.updated_at,\n                COALESCE((\n                    SELECT COUNT(*)::bigint\n                    FROM context_files cf_total\n                    WHERE cf_total.file_id = f.id\n                ), 0::bigint) as \"contexts_count!\",\n                COALESCE((\n                    SELECT ARRAY(\n                        SELECT cf_preview.context_id\n                        FROM context_files cf_preview\n                        WHERE cf_preview.file_id = f.id\n                        ORDER BY cf_preview.context_id DESC\n                        LIMIT 10\n                    )\n                ), '{}'::int4[]) as \"contexts!: Vec<i32>\"\n            FROM files f\n            WHERE ($2::file_status IS NULL OR f.status = $2::file_status)\n              AND ($3::text IS NULL OR encode(f.sha256, 'hex') ILIKE $3)\n              AND ($4::int4 IS NULL OR EXISTS (\n                    SELECT 1\n                    FROM context_files cf_filter\n                    WHERE cf_filter.file_id = f.id\n                      AND cf_filter.context_id = $4\n                ))\n              AND (\n                $5::timestamptz IS NULL\n                OR (f.updated_at, f.id) < ($5, $6)\n              )\n            ORDER BY f.updated_at DESC, f.id DESC\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "file_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "sha256",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "status: FileStatus",
+        "type_info": {
+          "Custom": {
+            "name": "file_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "processing",
+                "success",
+                "failure"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "mir_job_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "mir_artifact_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "contexts_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "contexts!: Vec<i32>",
+        "type_info": "Int4Array"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        {
+          "Custom": {
+            "name": "file_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "processing",
+                "success",
+                "failure"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "750674b36a97f02886e02c31be0403d46d5b924ec14292336547f71cf3c7b5ef"
+}

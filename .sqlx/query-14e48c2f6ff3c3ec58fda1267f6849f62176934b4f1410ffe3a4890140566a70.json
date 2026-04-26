@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                c.id, \n                c.title, \n                c.description, \n                c.created_at, \n                c.updated_at, \n                c.owner_id,\n                c.mode as \"mode: ContextMode\",\n                (SELECT COUNT(*) FROM context_files cf WHERE cf.context_id = c.id) as \"files_count?\"\n            FROM contexts c\n            WHERE (c.created_at, c.id) < ($2, $3)\n            AND ($4::UUID IS NULL OR c.owner_id = $4)\n            ORDER BY c.created_at DESC, c.id DESC\n                LIMIT $1\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "mode: ContextMode",
+        "type_info": {
+          "Custom": {
+            "name": "context_mode",
+            "kind": {
+              "Enum": [
+                "emb",
+                "rdf",
+                "lpg"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "files_count?",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Timestamptz",
+        "Int4",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "14e48c2f6ff3c3ec58fda1267f6849f62176934b4f1410ffe3a4890140566a70"
+}

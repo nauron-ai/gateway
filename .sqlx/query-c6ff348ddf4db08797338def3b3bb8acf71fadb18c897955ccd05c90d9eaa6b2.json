@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_settings (\n                user_id,\n                default_chat_mode,\n                default_k,\n                default_lang,\n                theme\n            )\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT (user_id) DO UPDATE SET\n                default_chat_mode = COALESCE(EXCLUDED.default_chat_mode, user_settings.default_chat_mode),\n                default_k = COALESCE(EXCLUDED.default_k, user_settings.default_k),\n                default_lang = COALESCE(EXCLUDED.default_lang, user_settings.default_lang),\n                theme = COALESCE(EXCLUDED.theme, user_settings.theme),\n                updated_at = NOW()\n            RETURNING\n                user_id,\n                default_chat_mode as \"default_chat_mode: ChatMode\",\n                default_k,\n                default_lang,\n                theme as \"theme: UserTheme\",\n                created_at,\n                updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "default_chat_mode: ChatMode",
+        "type_info": {
+          "Custom": {
+            "name": "chat_mode",
+            "kind": {
+              "Enum": [
+                "emb",
+                "rdf-emb",
+                "bn"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "default_k",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "default_lang",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "theme: UserTheme",
+        "type_info": {
+          "Custom": {
+            "name": "user_theme",
+            "kind": {
+              "Enum": [
+                "dark"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "chat_mode",
+            "kind": {
+              "Enum": [
+                "emb",
+                "rdf-emb",
+                "bn"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Text",
+        {
+          "Custom": {
+            "name": "user_theme",
+            "kind": {
+              "Enum": [
+                "dark"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "c6ff348ddf4db08797338def3b3bb8acf71fadb18c897955ccd05c90d9eaa6b2"
+}

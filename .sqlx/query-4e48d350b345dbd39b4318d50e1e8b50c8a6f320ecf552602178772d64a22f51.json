@@ -1,0 +1,229 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    job_id,\n                    context_id,\n                    file_id,\n                    pipeline_id,\n                    source_job_id,\n                    engine as \"engine: JobEngine\",\n                    kind as \"kind: JobKind\",\n                    status as \"status: JobStatus\",\n                    mir_stage as \"mir_stage: MirStage\",\n                    rdf_stage as \"rdf_stage: RdfStage\",\n                    ingest_stage as \"ingest_stage: IngestStage\",\n                    conditions_stage as \"conditions_stage: ConditionsEvaluateStage\",\n                    progress_pct,\n                    stage_progress_current,\n                    stage_progress_total,\n                    stage_progress_pct,\n                    message,\n                    result_json,\n                    updated_at\n                FROM jobs\n                WHERE context_id = $1\n                ORDER BY updated_at DESC, job_id DESC\n                LIMIT $2\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "job_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "context_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "file_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "pipeline_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "source_job_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "engine: JobEngine",
+        "type_info": {
+          "Custom": {
+            "name": "job_engine",
+            "kind": {
+              "Enum": [
+                "mir",
+                "rdf",
+                "lpg",
+                "bayessian",
+                "ingest",
+                "conditions"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "kind: JobKind",
+        "type_info": {
+          "Custom": {
+            "name": "job_kind",
+            "kind": {
+              "Enum": [
+                "reused",
+                "mir_linked",
+                "fanout",
+                "retry"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "status: JobStatus",
+        "type_info": {
+          "Custom": {
+            "name": "job_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "in_progress",
+                "success",
+                "failure",
+                "retryable",
+                "retired"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "mir_stage: MirStage",
+        "type_info": {
+          "Custom": {
+            "name": "mir_job_stage",
+            "kind": {
+              "Enum": [
+                "received",
+                "detect",
+                "pandoc_run",
+                "pandoc_assemble",
+                "processing_run",
+                "processing_assemble",
+                "upload",
+                "completed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "rdf_stage: RdfStage",
+        "type_info": {
+          "Custom": {
+            "name": "rdf_job_stage",
+            "kind": {
+              "Enum": [
+                "received",
+                "fetch_text",
+                "segment",
+                "information_extraction",
+                "shacl_validate",
+                "reasoning",
+                "persist",
+                "completed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "ingest_stage: IngestStage",
+        "type_info": {
+          "Custom": {
+            "name": "ingest_job_stage",
+            "kind": {
+              "Enum": [
+                "queued",
+                "received",
+                "llm",
+                "persist",
+                "completed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "conditions_stage: ConditionsEvaluateStage",
+        "type_info": {
+          "Custom": {
+            "name": "conditions_job_stage",
+            "kind": {
+              "Enum": [
+                "queued",
+                "received",
+                "retrieve",
+                "reason",
+                "completed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "progress_pct",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 13,
+        "name": "stage_progress_current",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "stage_progress_total",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "stage_progress_pct",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 16,
+        "name": "message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "result_json",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 18,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "4e48d350b345dbd39b4318d50e1e8b50c8a6f320ecf552602178772d64a22f51"
+}

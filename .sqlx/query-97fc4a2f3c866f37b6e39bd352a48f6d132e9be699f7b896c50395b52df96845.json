@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH windowed AS (\n                SELECT *\n                FROM connection_events\n                WHERE created_at >= $1\n                  AND ($2::text IS NULL OR service = $2)\n            ),\n            last_events AS (\n                SELECT DISTINCT ON (service)\n                    service,\n                    status,\n                    created_at,\n                    error\n                FROM windowed\n                ORDER BY service, created_at DESC\n            )\n            SELECT\n                w.service,\n                COUNT(*)::bigint AS \"request_count!\",\n                COALESCE(\n                    (COUNT(*) FILTER (WHERE w.status = 0 OR w.status >= 400))::float\n                        / NULLIF(COUNT(*)::float, 0.0),\n                    0.0\n                )::float8 AS \"error_rate!\",\n                percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms)::float8 AS \"p50_latency_ms!\",\n                percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms)::float8 AS \"p95_latency_ms!\",\n                percentile_cont(0.99) WITHIN GROUP (ORDER BY latency_ms)::float8 AS \"p99_latency_ms!\",\n                l.status AS \"last_status!\",\n                l.created_at AS \"last_seen!\",\n                l.error AS \"last_error?\"\n            FROM windowed w\n            JOIN last_events l ON l.service = w.service\n            GROUP BY w.service, l.status, l.created_at, l.error\n            ORDER BY w.service\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "service",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "request_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "error_rate!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "p50_latency_ms!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "p95_latency_ms!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "p99_latency_ms!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_status!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_seen!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_error?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "97fc4a2f3c866f37b6e39bd352a48f6d132e9be699f7b896c50395b52df96845"
+}

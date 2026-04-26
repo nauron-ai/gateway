@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: en-US
+tone_instructions: "Be concise and pragmatic. Prioritize correctness, regressions, malformed input, retries, timeouts, resource handling, operability, and readability. Avoid style-only suggestions unless they point to a real bug or repository rule violation."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  review_status: true
+  review_details: false
+  commit_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: false
+  estimate_code_review_effort: true
+  suggested_labels: false
+  suggested_reviewers: false
+  in_progress_fortune: false
+  poem: false
+  enable_prompt_for_ai_agents: false
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+  path_filters:
+    - "src/**"
+    - ".github/**"
+    - "scripts/**"
+    - "Cargo.toml"
+    - "Cargo.lock"
+    - "Dockerfile"
+    - ".coderabbit.yaml"
+    - "!target/**"
+  path_instructions:
+    - path: "src/**/*.rs"
+      instructions: |
+        Focus on behavioral regressions, malformed input handling, data loss, retries, timeouts, resource cleanup, subprocess safety, and concurrency issues.
+        Treat formatting and naming as low priority unless they hide a correctness problem or materially hurt maintainability.
+        Prefer simple control flow, small single-responsibility functions, and findings that explain user impact and missing tests.
+    - path: ".github/workflows/**"
+      instructions: |
+        Focus on broken triggers, wrong branch filters, missing permissions, cache correctness, and steps that can silently pass while skipping verification.
+    - path: "scripts/**"
+      instructions: |
+        Focus on shell safety, quoting, error propagation, portability, and failure handling.
+    - path: "Dockerfile"
+      instructions: |
+        Focus on runtime correctness, missing packages, cache invalidation mistakes, and security-sensitive defaults.
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false

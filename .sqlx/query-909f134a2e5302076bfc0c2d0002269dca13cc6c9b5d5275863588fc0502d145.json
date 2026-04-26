@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM jobs\n            WHERE engine = 'ingest'::job_engine\n              AND status IN ('success', 'failure', 'retryable', 'retired')\n              AND updated_at < (now() - interval '6 months')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "909f134a2e5302076bfc0c2d0002269dca13cc6c9b5d5275863588fc0502d145"
+}

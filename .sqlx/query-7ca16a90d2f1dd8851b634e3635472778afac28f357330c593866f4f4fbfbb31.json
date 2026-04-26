@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                engine as \"engine: JobEngine\",\n                COUNT(*)::bigint as \"count!\"\n            FROM jobs\n            WHERE context_id = $1\n            GROUP BY engine\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "engine: JobEngine",
+        "type_info": {
+          "Custom": {
+            "name": "job_engine",
+            "kind": {
+              "Enum": [
+                "mir",
+                "rdf",
+                "lpg",
+                "bayessian",
+                "ingest",
+                "conditions"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "7ca16a90d2f1dd8851b634e3635472778afac28f357330c593866f4f4fbfbb31"
+}

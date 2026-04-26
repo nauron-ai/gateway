@@ -1,0 +1,98 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE jobs\n            SET status = $1,\n                mir_stage = $2,\n                rdf_stage = $3,\n                ingest_stage = $4,\n                conditions_stage = $5,\n                progress_pct = $6,\n                stage_progress_current = $7,\n                stage_progress_total = $8,\n                stage_progress_pct = $9,\n                message = $10,\n                result_json = $11,\n                updated_at = $12\n            WHERE source_job_id = $13\n              AND kind = 'mir_linked'::job_kind\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "job_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "in_progress",
+                "success",
+                "failure",
+                "retryable",
+                "retired"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "mir_job_stage",
+            "kind": {
+              "Enum": [
+                "received",
+                "detect",
+                "pandoc_run",
+                "pandoc_assemble",
+                "processing_run",
+                "processing_assemble",
+                "upload",
+                "completed"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "rdf_job_stage",
+            "kind": {
+              "Enum": [
+                "received",
+                "fetch_text",
+                "segment",
+                "information_extraction",
+                "shacl_validate",
+                "reasoning",
+                "persist",
+                "completed"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "ingest_job_stage",
+            "kind": {
+              "Enum": [
+                "queued",
+                "received",
+                "llm",
+                "persist",
+                "completed"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "conditions_job_stage",
+            "kind": {
+              "Enum": [
+                "queued",
+                "received",
+                "retrieve",
+                "reason",
+                "completed"
+              ]
+            }
+          }
+        },
+        "Int2",
+        "Int4",
+        "Int4",
+        "Int2",
+        "Text",
+        "Jsonb",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a9d25c725e636bd58bff1d176ac22589dc5d3f6120d703e9fd4467215529bdc6"
+}

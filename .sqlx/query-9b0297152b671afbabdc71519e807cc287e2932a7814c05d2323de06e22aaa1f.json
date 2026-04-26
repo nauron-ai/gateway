@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT 1\n            FROM jobs\n            WHERE file_id = $1\n              AND context_id = $2\n              AND engine = $3\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "?column?",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4",
+        {
+          "Custom": {
+            "name": "job_engine",
+            "kind": {
+              "Enum": [
+                "mir",
+                "rdf",
+                "lpg",
+                "bayessian",
+                "ingest",
+                "conditions"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9b0297152b671afbabdc71519e807cc287e2932a7814c05d2323de06e22aaa1f"
+}

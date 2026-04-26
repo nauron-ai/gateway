@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                user_id,\n                default_chat_mode as \"default_chat_mode: ChatMode\",\n                default_k,\n                default_lang,\n                theme as \"theme: UserTheme\",\n                created_at,\n                updated_at\n            FROM user_settings\n            WHERE user_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "default_chat_mode: ChatMode",
+        "type_info": {
+          "Custom": {
+            "name": "chat_mode",
+            "kind": {
+              "Enum": [
+                "emb",
+                "rdf-emb",
+                "bn"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "default_k",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "default_lang",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "theme: UserTheme",
+        "type_info": {
+          "Custom": {
+            "name": "user_theme",
+            "kind": {
+              "Enum": [
+                "dark"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "b96d84f4414327ad3c811be86f1bc4d040eca5402ace1a54268b6dd8911fe285"
+}

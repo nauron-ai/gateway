@@ -14,6 +14,7 @@ RUN apt-get update \
         build-essential \
         clang \
         cmake \
+        libcurl4-openssl-dev \
         libssl-dev \
         libsasl2-dev \
         libzstd-dev \

@@ -43,6 +43,8 @@ jobs:
           toolchain: 1.95.0
       - name: Install rustfmt & clippy
         run: rustup component add rustfmt clippy
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
       - name: Cache cargo artifacts
         uses: Swatinem/rust-cache@v2
         with:

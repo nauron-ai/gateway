@@ -7,15 +7,13 @@ use utoipa::ToSchema;
 
 use crate::{
     auth::AuthUser,
-    db::settings::{ChatMode, UpdateUserSettingsParams, UserTheme},
+    db::settings::{UpdateUserSettingsParams, UserTheme},
     error::GatewayError,
     state::AppState,
 };
 
 #[derive(Debug, Serialize, ToSchema, Default)]
 pub struct UserSettingsResponse {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub default_chat_mode: Option<ChatMode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_k: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -26,8 +24,6 @@ pub struct UserSettingsResponse {
 
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateUserSettingsRequest {
-    #[serde(default)]
-    pub default_chat_mode: Option<ChatMode>,
     #[serde(default)]
     pub default_k: Option<i32>,
     #[serde(default)]
@@ -40,7 +36,6 @@ impl From<crate::db::settings::UserSettings> for UserSettingsResponse {
     fn from(value: crate::db::settings::UserSettings) -> Self {
         let _ = (value.user_id, value.created_at, value.updated_at);
         Self {
-            default_chat_mode: value.default_chat_mode,
             default_k: value.default_k,
             default_lang: value.default_lang,
             theme: value.theme,
@@ -52,7 +47,7 @@ impl From<crate::db::settings::UserSettings> for UserSettingsResponse {
     get,
     path = "/v1/settings",
     summary = "Get user settings",
-    description = "Returns current user's preferences including default chat mode, search parameters (k), language, and UI theme.",
+    description = "Returns current user's preferences including search parameters (k), language, and UI theme.",
     responses(
         (status = 200, description = "Current user settings", body = UserSettingsResponse)
     ),
@@ -80,9 +75,8 @@ pub async fn get_settings(
     path = "/v1/settings",
     summary = "Update user settings",
     description = "Updates user preferences. All fields are optional - only provided fields are updated. \
-Settings include: default_chat_mode, default_k (search results count), default_lang, theme.",
+Settings include: default_k (search results count), default_lang, theme.",
     request_body(content = UpdateUserSettingsRequest, example = json!({
-        "default_chat_mode": "rdf-emb",
         "default_k": 15,
         "default_lang": "pl",
         "theme": "dark"
@@ -111,7 +105,6 @@ pub async fn update_settings(
     }
 
     let params = UpdateUserSettingsParams {
-        default_chat_mode: payload.default_chat_mode,
         default_k: payload.default_k,
         default_lang: payload.default_lang,
         theme: payload.theme,

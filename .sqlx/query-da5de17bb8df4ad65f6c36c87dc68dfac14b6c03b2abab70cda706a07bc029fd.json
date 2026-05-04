@@ -1,0 +1,73 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_settings (\n                user_id,\n                default_k,\n                default_lang,\n                theme\n            )\n            VALUES ($1, $2, $3, $4)\n            ON CONFLICT (user_id) DO UPDATE SET\n                default_k = COALESCE(EXCLUDED.default_k, user_settings.default_k),\n                default_lang = COALESCE(EXCLUDED.default_lang, user_settings.default_lang),\n                theme = COALESCE(EXCLUDED.theme, user_settings.theme),\n                updated_at = NOW()\n            RETURNING\n                user_id,\n                default_k,\n                default_lang,\n                theme as \"theme: UserTheme\",\n                created_at,\n                updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "default_k",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "default_lang",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "theme: UserTheme",
+        "type_info": {
+          "Custom": {
+            "name": "user_theme",
+            "kind": {
+              "Enum": [
+                "dark"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        {
+          "Custom": {
+            "name": "user_theme",
+            "kind": {
+              "Enum": [
+                "dark"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "da5de17bb8df4ad65f6c36c87dc68dfac14b6c03b2abab70cda706a07bc029fd"
+}

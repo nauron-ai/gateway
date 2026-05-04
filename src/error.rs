@@ -78,7 +78,7 @@ impl IntoResponse for GatewayError {
                 crate::inferencer::InferencerClientError::CircuitOpen => {
                     StatusCode::SERVICE_UNAVAILABLE
                 }
-                crate::inferencer::InferencerClientError::UnexpectedStatus(code)
+                crate::inferencer::InferencerClientError::UnexpectedStatusBody(code, _)
                     if code.is_client_error() || *code == StatusCode::NOT_FOUND =>
                 {
                     *code

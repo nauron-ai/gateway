@@ -16,7 +16,6 @@ mod tracing;
 
 pub(crate) mod admin;
 pub(crate) mod auth;
-pub(crate) mod chat;
 pub(crate) mod contexts;
 pub(crate) mod health;
 pub(crate) mod jobs;
@@ -93,7 +92,6 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             "/v1/settings",
             get(settings::get_settings).patch(settings::update_settings),
         )
-        .nest("/v1/chat", chat::router())
         .nest("/admin", admin_router)
         .layer(middleware::from_fn_with_state(
             state.clone(),

@@ -40,15 +40,6 @@ use nauron_contracts::health::{ComponentStatus, HealthResponse, ServiceStatus};
         crate::routes::admin::files::file_details,
         crate::routes::admin::files::retry_file,
         crate::routes::admin::connections::list_connection_events,
-        crate::routes::admin::chat::list_sessions,
-        crate::routes::admin::chat::get_session,
-        crate::routes::admin::chat::get_reasoning,
-        crate::routes::chat::chat_emb,
-        crate::routes::chat::chat_rdf_emb,
-        crate::routes::chat::chat_bn,
-        crate::routes::chat::list_sessions,
-        crate::routes::chat::get_session,
-        crate::routes::chat::get_reasoning,
         crate::routes::oneshots::create_oneshot,
         crate::routes::oneshots::create_ingest_job
     ),
@@ -110,8 +101,6 @@ use nauron_contracts::health::{ComponentStatus, HealthResponse, ServiceStatus};
             crate::routes::search::SearchResponse,
             crate::routes::search::SearchResult,
             crate::routes::search::SearchEvidence,
-            nauron_contracts::chat::ChatMessageRequest,
-            nauron_contracts::chat::SseExample,
             nauron_contracts::conditions::ConditionEvaluationResponse,
             nauron_contracts::conditions::ConditionEvaluationResult,
             nauron_contracts::conditions::ConditionEvaluationOptions,
@@ -140,7 +129,6 @@ use nauron_contracts::health::{ComponentStatus, HealthResponse, ServiceStatus};
         (name = "Auth", description = "Authentication"),
         (name = "Users", description = "User management"),
         (name = "Admin", description = "Administrative endpoints"),
-        (name = "Chat", description = "Chat embeddings APIs"),
         (name = "Conditions", description = "Condition evaluation on contexts")
     )
 )]

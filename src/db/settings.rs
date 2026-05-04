@@ -13,25 +13,6 @@ use uuid::Uuid;
     sqlx::Type,
     utoipa::ToSchema,
 )]
-#[sqlx(type_name = "chat_mode", rename_all = "kebab-case")]
-#[serde(rename_all = "kebab-case")]
-pub enum ChatMode {
-    Emb,
-    RdfEmb,
-    Bn,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    serde::Serialize,
-    serde::Deserialize,
-    sqlx::Type,
-    utoipa::ToSchema,
-)]
 #[sqlx(type_name = "user_theme", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum UserTheme {
@@ -46,7 +27,6 @@ pub struct UserSettingsRepository {
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct UserSettings {
     pub user_id: Uuid,
-    pub default_chat_mode: Option<ChatMode>,
     pub default_k: Option<i32>,
     pub default_lang: Option<String>,
     pub theme: Option<UserTheme>,
@@ -56,7 +36,6 @@ pub struct UserSettings {
 
 #[derive(Debug, Clone)]
 pub struct UpdateUserSettingsParams {
-    pub default_chat_mode: Option<ChatMode>,
     pub default_k: Option<i32>,
     pub default_lang: Option<String>,
     pub theme: Option<UserTheme>,
@@ -73,7 +52,6 @@ impl UserSettingsRepository {
             r#"
             SELECT
                 user_id,
-                default_chat_mode as "default_chat_mode: ChatMode",
                 default_k,
                 default_lang,
                 theme as "theme: UserTheme",
@@ -98,21 +76,18 @@ impl UserSettingsRepository {
             r#"
             INSERT INTO user_settings (
                 user_id,
-                default_chat_mode,
                 default_k,
                 default_lang,
                 theme
             )
-            VALUES ($1, $2, $3, $4, $5)
+            VALUES ($1, $2, $3, $4)
             ON CONFLICT (user_id) DO UPDATE SET
-                default_chat_mode = COALESCE(EXCLUDED.default_chat_mode, user_settings.default_chat_mode),
                 default_k = COALESCE(EXCLUDED.default_k, user_settings.default_k),
                 default_lang = COALESCE(EXCLUDED.default_lang, user_settings.default_lang),
                 theme = COALESCE(EXCLUDED.theme, user_settings.theme),
                 updated_at = NOW()
             RETURNING
                 user_id,
-                default_chat_mode as "default_chat_mode: ChatMode",
                 default_k,
                 default_lang,
                 theme as "theme: UserTheme",
@@ -120,7 +95,6 @@ impl UserSettingsRepository {
                 updated_at
             "#,
             user_id,
-            params.default_chat_mode as _,
             params.default_k,
             params.default_lang,
             params.theme as _
@@ -132,14 +106,7 @@ impl UserSettingsRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{ChatMode, UserTheme};
-
-    #[test]
-    fn chat_mode_rejects_unknown_value() {
-        let value = serde_json::from_str::<ChatMode>("\"unknown\"");
-
-        assert!(value.is_err());
-    }
+    use super::UserTheme;
 
     #[test]
     fn user_theme_rejects_unknown_value() {

@@ -13,7 +13,8 @@ bytes = "1.7"
 chrono = { version = "0.4.38", default-features = false, features = ["clock"] }
 clap = { version = "4.5.7", features = ["derive", "env"] }
 hex = "0.4"
-nauron-contracts = { git = "https://github.com/nauron-ai/nauron-contracts.git", tag = "0.1.0", features = ["sqlx"] }
+# TODO: switch back to a release tag when nauron-contracts publishes the next version.
+nauron-contracts = { git = "https://github.com/nauron-ai/nauron-contracts.git", branch = "main", features = ["sqlx"] }
 rdkafka = { version = "0.39.0", features = ["cmake-build", "tokio", "ssl"] }
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = "1.0.132"
@@ -31,9 +32,8 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "macros", "ch
 zip = "0.6"
 utoipa = { version = "5.4.0", features = ["axum_extras", "chrono", "uuid"] }
 utoipa-swagger-ui = { version = "9.0.2", default-features = false, features = ["axum", "vendored"] }
-reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream", "multipart"], default-features = false }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "multipart"], default-features = false }
 url = "2.5"
-futures-util = "0.3"
 argon2 = "0.5"
 rand_core = { version = "0.6", features = ["std"] }
 jsonwebtoken = { version = "9", default-features = true }

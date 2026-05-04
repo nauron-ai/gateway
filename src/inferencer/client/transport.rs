@@ -107,51 +107,6 @@ impl InferencerClient {
         Ok((status, raw_body))
     }
 
-    pub(crate) async fn send_stream(
-        &self,
-        method: Method,
-        endpoint: &str,
-        builder: RequestBuilder,
-    ) -> Result<Response, InferencerClientError> {
-        self.check_circuit()?;
-
-        let result = self.send_stream_inner(method, endpoint, builder).await;
-        self.record_circuit_result(&result);
-        result
-    }
-
-    async fn send_stream_inner(
-        &self,
-        method: Method,
-        endpoint: &str,
-        builder: RequestBuilder,
-    ) -> Result<Response, InferencerClientError> {
-        let (response, start) = self.send(endpoint, method.clone(), builder).await?;
-        let status = response.status();
-        let response_bytes = response.content_length().map(|value| value as i64);
-        if !status.is_success() {
-            warn!(%status, endpoint, "inferencer returned non-success status");
-            self.record_event(
-                endpoint,
-                &method,
-                start,
-                status.as_u16() as i32,
-                response_bytes,
-                Some(format!("unexpected status: {status}")),
-            );
-            return Err(InferencerClientError::UnexpectedStatus(status));
-        }
-        self.record_event(
-            endpoint,
-            &method,
-            start,
-            status.as_u16() as i32,
-            response_bytes,
-            None,
-        );
-        Ok(response)
-    }
-
     async fn send(
         &self,
         endpoint: &str,
@@ -176,7 +131,6 @@ impl InferencerClient {
     fn is_transient_error(err: &InferencerClientError) -> bool {
         match err {
             InferencerClientError::Http(e) => e.is_connect() || e.is_timeout(),
-            InferencerClientError::UnexpectedStatus(s) => s.is_server_error(),
             InferencerClientError::UnexpectedStatusBody(s, _) => s.is_server_error(),
             InferencerClientError::CircuitOpen
             | InferencerClientError::UrlParse(_)

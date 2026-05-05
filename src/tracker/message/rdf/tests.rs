@@ -78,6 +78,9 @@ fn retryable_result_maps_to_retryable_job_status() {
 fn progress_upsert_copies_stage_progress_fields() {
     let upsert = build_rdf_progress_upsert(sample_progress(), &sample_job()).expect("valid upsert");
 
+    assert_eq!(upsert.status, JobStatus::InProgress);
+    assert_eq!(upsert.message.as_deref(), Some("extracting relations"));
+    assert_eq!(upsert.result_json, None);
     assert_eq!(upsert.progress_pct, Some(63));
     assert_eq!(upsert.stage_progress_current, Some(5));
     assert_eq!(upsert.stage_progress_total, Some(8));

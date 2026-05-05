@@ -48,6 +48,45 @@ fn build_rdf_progress_upsert(
     progress: RdfProgress,
     current: &JobRecord,
 ) -> Result<JobSnapshotUpsert, TrackerError> {
+    let terminal = is_terminal_status(current.status);
+    let status = if terminal {
+        current.status
+    } else {
+        JobStatus::InProgress
+    };
+    let message = if terminal {
+        current.message.clone()
+    } else {
+        progress.message
+    };
+    let result_json = if terminal {
+        current.result_json.clone()
+    } else {
+        None
+    };
+    let (stage, progress_pct, stage_progress_current, stage_progress_total, stage_progress_pct) =
+        if terminal {
+            (
+                current.stage,
+                current.progress_pct,
+                current.stage_progress_current,
+                current.stage_progress_total,
+                current.stage_progress_pct,
+            )
+        } else {
+            (
+                Some(progress.stage.into()),
+                Some(progress.percent.into()),
+                progress
+                    .stage_current
+                    .and_then(|value| i32::try_from(value).ok()),
+                progress
+                    .stage_total
+                    .and_then(|value| i32::try_from(value).ok()),
+                progress.stage_percent.map(i16::from),
+            )
+        };
+
     Ok(JobSnapshotUpsert {
         job_id: progress.job_id,
         context_id: progress.context_id,
@@ -56,20 +95,23 @@ fn build_rdf_progress_upsert(
         source_job_id: current.source_job_id,
         engine: JobEngine::Rdf,
         kind: None,
-        status: JobStatus::InProgress,
-        stage: Some(progress.stage.into()),
-        progress_pct: Some(progress.percent.into()),
-        stage_progress_current: progress
-            .stage_current
-            .and_then(|value| i32::try_from(value).ok()),
-        stage_progress_total: progress
-            .stage_total
-            .and_then(|value| i32::try_from(value).ok()),
-        stage_progress_pct: progress.stage_percent.map(i16::from),
-        message: progress.message,
-        result_json: None,
+        status,
+        stage,
+        progress_pct,
+        stage_progress_current,
+        stage_progress_total,
+        stage_progress_pct,
+        message,
+        result_json,
         updated_at: progress.timestamp,
     })
+}
+
+fn is_terminal_status(status: JobStatus) -> bool {
+    matches!(
+        status,
+        JobStatus::Success | JobStatus::Failure | JobStatus::Retryable | JobStatus::Retired
+    )
 }
 
 fn build_rdf_result_upsert(
@@ -151,87 +193,4 @@ fn rdf_job_id(result: &RdfResult) -> Uuid {
 }
 
 #[cfg(test)]
-mod tests {
-    use chrono::Utc;
-    use nauron_contracts::{FailureKind, RdfResult, SchemaVersion};
-    use uuid::Uuid;
-
-    use super::*;
-    use crate::test_utils::parse_uuid;
-
-    fn sample_job() -> JobRecord {
-        JobRecord {
-            job_id: parse_uuid("22222222-2222-2222-2222-222222222222"),
-            context_id: 7,
-            file_id: Some(11),
-            pipeline_id: Uuid::nil(),
-            source_job_id: None,
-            engine: JobEngine::Rdf,
-            kind: None,
-            status: JobStatus::InProgress,
-            stage: None,
-            progress_pct: Some(40),
-            stage_progress_current: Some(2),
-            stage_progress_total: Some(5),
-            stage_progress_pct: Some(40),
-            message: None,
-            result_json: None,
-            updated_at: Utc::now(),
-        }
-    }
-
-    #[test]
-    fn retryable_result_maps_to_retryable_job_status() {
-        let result = RdfResult::Retryable {
-            schema_version: SchemaVersion::V1,
-            job_id: parse_uuid("22222222-2222-2222-2222-222222222222"),
-            doc_id: parse_uuid("33333333-3333-3333-3333-333333333333"),
-            context_id: 7,
-            stage: RdfStage::Persist,
-            kind: FailureKind::Upstream,
-            message: "provider throttled request".into(),
-            details: Some("provider=azure status=429".into()),
-            retry_after_seconds: Some(31),
-            occurred_at: Utc::now(),
-        };
-
-        let upsert = build_rdf_result_upsert(result, &sample_job()).expect("valid upsert");
-
-        assert_eq!(upsert.status, JobStatus::Retryable);
-        assert_eq!(
-            upsert.message.as_deref(),
-            Some("provider throttled request")
-        );
-        assert_eq!(upsert.stage_progress_current, None);
-        assert_eq!(upsert.stage_progress_total, None);
-        assert_eq!(upsert.stage_progress_pct, None);
-        let payload = upsert.result_json.expect("serialized result");
-        assert_eq!(payload["retry_after_seconds"], 31);
-        assert_eq!(payload["kind"], "upstream");
-        assert_eq!(payload["details"], "provider=azure status=429");
-    }
-
-    #[test]
-    fn progress_upsert_copies_stage_progress_fields() {
-        let progress = RdfProgress {
-            schema_version: SchemaVersion::V1,
-            job_id: parse_uuid("22222222-2222-2222-2222-222222222222"),
-            doc_id: parse_uuid("33333333-3333-3333-3333-333333333333"),
-            context_id: 7,
-            stage: RdfStage::InformationExtraction,
-            percent: 63,
-            stage_current: Some(5),
-            stage_total: Some(8),
-            stage_percent: Some(62),
-            message: Some("extracting relations".into()),
-            timestamp: Utc::now(),
-        };
-
-        let upsert = build_rdf_progress_upsert(progress, &sample_job()).expect("valid upsert");
-
-        assert_eq!(upsert.progress_pct, Some(63));
-        assert_eq!(upsert.stage_progress_current, Some(5));
-        assert_eq!(upsert.stage_progress_total, Some(8));
-        assert_eq!(upsert.stage_progress_pct, Some(62));
-    }
-}
+mod tests;

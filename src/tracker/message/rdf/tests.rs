@@ -81,6 +81,7 @@ fn progress_upsert_copies_stage_progress_fields() {
     assert_eq!(upsert.status, JobStatus::InProgress);
     assert_eq!(upsert.message.as_deref(), Some("extracting relations"));
     assert_eq!(upsert.result_json, None);
+    assert_rdf_stage(upsert.stage, RdfStage::InformationExtraction);
     assert_eq!(upsert.progress_pct, Some(63));
     assert_eq!(upsert.stage_progress_current, Some(5));
     assert_eq!(upsert.stage_progress_total, Some(8));

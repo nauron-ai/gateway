@@ -86,14 +86,42 @@ fn progress_upsert_copies_stage_progress_fields() {
 
 #[test]
 fn progress_upsert_does_not_downgrade_terminal_status() {
-    let mut current = sample_job();
-    current.status = JobStatus::Success;
-    current.message = Some("done".into());
-    current.result_json = Some(json!({"status": "success"}));
+    for status in terminal_statuses() {
+        let mut current = sample_job();
+        current.status = status;
+        current.stage = Some(RdfStage::Persist.into());
+        current.progress_pct = Some(100);
+        current.stage_progress_current = Some(9);
+        current.stage_progress_total = Some(9);
+        current.stage_progress_pct = Some(100);
+        current.message = Some("done".into());
+        current.result_json = Some(json!({"status": "terminal"}));
 
-    let upsert = build_rdf_progress_upsert(sample_progress(), &current).expect("valid upsert");
+        let upsert = build_rdf_progress_upsert(sample_progress(), &current).expect("valid upsert");
 
-    assert_eq!(upsert.status, JobStatus::Success);
-    assert_eq!(upsert.message.as_deref(), Some("done"));
-    assert_eq!(upsert.result_json, Some(json!({"status": "success"})));
+        assert_eq!(upsert.status, status);
+        assert_rdf_stage(upsert.stage, RdfStage::Persist);
+        assert_eq!(upsert.progress_pct, Some(100));
+        assert_eq!(upsert.stage_progress_current, Some(9));
+        assert_eq!(upsert.stage_progress_total, Some(9));
+        assert_eq!(upsert.stage_progress_pct, Some(100));
+        assert_eq!(upsert.message.as_deref(), Some("done"));
+        assert_eq!(upsert.result_json, Some(json!({"status": "terminal"})));
+    }
+}
+
+fn terminal_statuses() -> [JobStatus; 4] {
+    [
+        JobStatus::Success,
+        JobStatus::Failure,
+        JobStatus::Retryable,
+        JobStatus::Retired,
+    ]
+}
+
+fn assert_rdf_stage(stage: Option<crate::db::jobs::JobStage>, expected: RdfStage) {
+    match stage {
+        Some(crate::db::jobs::JobStage::Rdf(actual)) => assert_eq!(actual, expected),
+        _ => panic!("expected rdf stage"),
+    }
 }

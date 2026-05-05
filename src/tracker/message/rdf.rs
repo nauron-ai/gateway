@@ -64,6 +64,28 @@ fn build_rdf_progress_upsert(
     } else {
         None
     };
+    let (stage, progress_pct, stage_progress_current, stage_progress_total, stage_progress_pct) =
+        if terminal {
+            (
+                current.stage,
+                current.progress_pct,
+                current.stage_progress_current,
+                current.stage_progress_total,
+                current.stage_progress_pct,
+            )
+        } else {
+            (
+                Some(progress.stage.into()),
+                Some(progress.percent.into()),
+                progress
+                    .stage_current
+                    .and_then(|value| i32::try_from(value).ok()),
+                progress
+                    .stage_total
+                    .and_then(|value| i32::try_from(value).ok()),
+                progress.stage_percent.map(i16::from),
+            )
+        };
 
     Ok(JobSnapshotUpsert {
         job_id: progress.job_id,
@@ -74,15 +96,11 @@ fn build_rdf_progress_upsert(
         engine: JobEngine::Rdf,
         kind: None,
         status,
-        stage: Some(progress.stage.into()),
-        progress_pct: Some(progress.percent.into()),
-        stage_progress_current: progress
-            .stage_current
-            .and_then(|value| i32::try_from(value).ok()),
-        stage_progress_total: progress
-            .stage_total
-            .and_then(|value| i32::try_from(value).ok()),
-        stage_progress_pct: progress.stage_percent.map(i16::from),
+        stage,
+        progress_pct,
+        stage_progress_current,
+        stage_progress_total,
+        stage_progress_pct,
         message,
         result_json,
         updated_at: progress.timestamp,

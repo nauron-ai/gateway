@@ -9,7 +9,7 @@ use axum::{
     response::IntoResponse,
     routing::post,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -23,6 +23,7 @@ use crate::inferencer::{
     IngestSchemaField, OneshotFailureResponse, OneshotRequest, OneshotResult,
     OneshotSuccessResponse,
 };
+use crate::routes::callback_target::{CallbackTarget, validate_callback_target};
 use crate::state::AppState;
 
 const IDEMPOTENCY_KEY_HEADER: &str = "Idempotency-Key";
@@ -95,6 +96,15 @@ pub struct CreateIngestBody {
     pub instruction: Option<String>,
     pub language: Option<String>,
     pub metadata: Option<Value>,
+    pub callback: Option<CallbackTarget>,
+}
+
+#[derive(Debug, Serialize)]
+struct IngestStartWithCallback {
+    #[serde(flatten)]
+    start: nauron_contracts::IngestStart,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    callback: Option<CallbackTarget>,
 }
 
 #[utoipa::path(
@@ -132,6 +142,13 @@ pub async fn create_ingest_job(
         })?;
     let user_id = user.id.to_string();
     let job_id = build_ingest_job_id(context_id, &user_id, &headers);
+    let CreateIngestBody {
+        schema,
+        instruction,
+        language,
+        metadata,
+        callback,
+    } = body;
 
     if let Some(existing) = state.job_repo.get(job_id).await? {
         if existing.engine != JobEngine::Ingest {
@@ -171,12 +188,12 @@ pub async fn create_ingest_job(
     };
     state.job_repo.upsert_snapshot(upsert).await?;
 
-    for field in &body.schema {
+    for field in &schema {
         validate_ingest_type_spec(field.r#type.as_ref())?;
     }
+    validate_callback_target(callback.as_ref())?;
 
-    let schema = body
-        .schema
+    let schema = schema
         .into_iter()
         .map(|field| nauron_contracts::IngestSchemaField {
             key: field.key,
@@ -192,12 +209,17 @@ pub async fn create_ingest_job(
         context_id,
         user_id: Some(user_id),
         schema,
-        instruction: body.instruction,
-        language: body.language,
-        metadata: body.metadata,
+        instruction,
+        language,
+        metadata,
         submitted_at: Some(chrono::Utc::now()),
     };
-    if let Err(err) = state.ingest_publisher.publish_json(job_id, &start).await {
+    let start_with_callback = IngestStartWithCallback { start, callback };
+    if let Err(err) = state
+        .ingest_publisher
+        .publish_json(job_id, &start_with_callback)
+        .await
+    {
         tracing::error!(job_id = %job_id, context_id, error = %err, "failed to publish ingest.start");
         return Err(err.into());
     }

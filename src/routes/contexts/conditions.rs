@@ -14,6 +14,7 @@ use super::ensure_context_owner;
 use crate::auth::AuthUser;
 use crate::db::jobs::{JobEngine, JobSnapshotUpsert, JobStatus};
 use crate::idempotency::build_deterministic_job_id;
+use crate::routes::callback_target::{CallbackTarget, validate_callback_target};
 use crate::{error::GatewayError, state::AppState};
 use nauron_contracts::conditions::{
     ConditionContextMode, ConditionEvaluationOptions, ConditionEvaluationRequest, ConditionLimits,
@@ -34,6 +35,16 @@ pub struct EvaluateConditionsRequest {
     pub conditions: Vec<ConditionSpec>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub options: Option<ConditionEvaluationOptions>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub callback: Option<CallbackTarget>,
+}
+
+#[derive(Debug, Serialize)]
+struct ConditionsEvaluateStartWithCallback {
+    #[serde(flatten)]
+    start: nauron_contracts::conditions::ConditionsEvaluateStart,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    callback: Option<CallbackTarget>,
 }
 
 fn to_validation_error(err: ConditionValidationError) -> GatewayError {
@@ -86,6 +97,14 @@ pub async fn create_evaluate_conditions_job(
     let limits = ConditionLimits::default();
     let user_id = user.id.to_string();
     let job_id = build_conditions_evaluate_job_id(context_id, &user_id, &headers);
+    let EvaluateConditionsRequest {
+        document_hint,
+        query_hint,
+        target_doc_id,
+        conditions,
+        options,
+        callback,
+    } = payload;
 
     if let Some(existing) = state.job_repo.get(job_id).await? {
         if existing.engine != JobEngine::Conditions {
@@ -106,11 +125,11 @@ pub async fn create_evaluate_conditions_job(
 
     let internal_request = ConditionEvaluationRequest {
         context_id: context_id as i64,
-        document_hint: payload.document_hint,
-        query_hint: payload.query_hint,
-        target_doc_id: payload.target_doc_id,
-        conditions: payload.conditions,
-        options: payload.options,
+        document_hint,
+        query_hint,
+        target_doc_id,
+        conditions,
+        options,
         context_mode: Some(match context.mode {
             crate::db::contexts::ContextMode::Emb => ConditionContextMode::Emb,
             crate::db::contexts::ContextMode::Rdf => ConditionContextMode::Rdf,
@@ -118,6 +137,7 @@ pub async fn create_evaluate_conditions_job(
         }),
     };
     validate_request(&internal_request, limits).map_err(to_validation_error)?;
+    validate_callback_target(callback.as_ref())?;
 
     let pipeline_id = Uuid::new_v4();
     let upsert = JobSnapshotUpsert {
@@ -152,9 +172,10 @@ pub async fn create_evaluate_conditions_job(
         context_mode: internal_request.context_mode,
         submitted_at: Some(chrono::Utc::now()),
     };
+    let start_with_callback = ConditionsEvaluateStartWithCallback { start, callback };
     state
         .conditions_evaluate_publisher
-        .publish_json(job_id, &start)
+        .publish_json(job_id, &start_with_callback)
         .await?;
 
     Ok((

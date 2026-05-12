@@ -6,12 +6,13 @@ use axum::{
     http::{HeaderMap, StatusCode as HttpStatus},
     response::IntoResponse,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
 use super::ensure_context_owner;
 use crate::auth::AuthUser;
+use crate::db::job_callbacks::JobCallbackUpsert;
 use crate::db::jobs::{JobEngine, JobSnapshotUpsert, JobStatus};
 use crate::idempotency::build_deterministic_job_id;
 use crate::routes::callback_target::{CallbackTarget, validate_callback_target};
@@ -37,14 +38,6 @@ pub struct EvaluateConditionsRequest {
     pub options: Option<ConditionEvaluationOptions>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub callback: Option<CallbackTarget>,
-}
-
-#[derive(Debug, Serialize)]
-struct ConditionsEvaluateStartWithCallback {
-    #[serde(flatten)]
-    start: nauron_contracts::conditions::ConditionsEvaluateStart,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    callback: Option<CallbackTarget>,
 }
 
 fn to_validation_error(err: ConditionValidationError) -> GatewayError {
@@ -172,10 +165,19 @@ pub async fn create_evaluate_conditions_job(
         context_mode: internal_request.context_mode,
         submitted_at: Some(chrono::Utc::now()),
     };
-    let start_with_callback = ConditionsEvaluateStartWithCallback { start, callback };
+    if let Some(callback) = callback {
+        state
+            .job_callback_repo
+            .upsert(JobCallbackUpsert {
+                job_id,
+                url: callback.url,
+                secret: callback.secret,
+            })
+            .await?;
+    }
     state
         .conditions_evaluate_publisher
-        .publish_json(job_id, &start_with_callback)
+        .publish_json(job_id, &start)
         .await?;
 
     Ok((

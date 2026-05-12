@@ -23,8 +23,8 @@ use clap::Parser;
 use config::AppConfig;
 use db::{
     connections::ConnectionEventRepository, contexts::ContextRepository, files::FileRepository,
-    jobs::JobRepository, settings::UserSettingsRepository, shares::ContextShareRepository,
-    users::UserRepository,
+    job_callbacks::JobCallbackRepository, jobs::JobRepository, settings::UserSettingsRepository,
+    shares::ContextShareRepository, users::UserRepository,
 };
 use error::GatewayInitError;
 use inferencer::InferencerClient;
@@ -65,6 +65,7 @@ async fn run() -> Result<(), GatewayInitError> {
     let context_repo = ContextRepository::new(db_pool.clone());
     let connection_repo = ConnectionEventRepository::new(db_pool.clone());
     let file_repo = FileRepository::new(db_pool.clone());
+    let job_callback_repo = JobCallbackRepository::new(db_pool.clone());
     let job_repo = JobRepository::new(db_pool.clone());
     cleanup::spawn_ingest_job_cleanup(job_repo.clone());
     let share_repo = ContextShareRepository::new(db_pool.clone());
@@ -104,6 +105,7 @@ async fn run() -> Result<(), GatewayInitError> {
     let tracker = JobTracker::spawn(
         &app_config,
         job_repo.clone(),
+        job_callback_repo.clone(),
         file_repo.clone(),
         rdf_publisher.clone(),
         metrics.clone(),
@@ -113,6 +115,7 @@ async fn run() -> Result<(), GatewayInitError> {
         context: context_repo,
         connections: connection_repo,
         file: file_repo,
+        job_callback: job_callback_repo,
         job: job_repo,
         shares: share_repo,
         settings: settings_repo,

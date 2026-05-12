@@ -1,8 +1,8 @@
 use crate::config::AppConfig;
 use crate::db::{
     connections::ConnectionEventRepository, contexts::ContextRepository, files::FileRepository,
-    jobs::JobRepository, settings::UserSettingsRepository, shares::ContextShareRepository,
-    users::UserRepository,
+    job_callbacks::JobCallbackRepository, jobs::JobRepository, settings::UserSettingsRepository,
+    shares::ContextShareRepository, users::UserRepository,
 };
 use crate::inferencer::InferencerClient;
 use crate::kafka::KafkaPublisher;
@@ -16,6 +16,7 @@ pub struct AppRepositories {
     pub context: ContextRepository,
     pub connections: ConnectionEventRepository,
     pub file: FileRepository,
+    pub job_callback: JobCallbackRepository,
     pub job: JobRepository,
     pub shares: ContextShareRepository,
     pub settings: UserSettingsRepository,
@@ -34,6 +35,7 @@ pub struct AppState {
     pub context_repo: ContextRepository,
     pub connection_repo: ConnectionEventRepository,
     pub file_repo: FileRepository,
+    pub job_callback_repo: JobCallbackRepository,
     pub job_repo: JobRepository,
     pub share_repo: ContextShareRepository,
     pub settings_repo: UserSettingsRepository,
@@ -63,6 +65,7 @@ impl AppState {
             context,
             connections,
             file,
+            job_callback,
             job,
             shares,
             settings,
@@ -83,6 +86,7 @@ impl AppState {
             context_repo: context,
             connection_repo: connections,
             file_repo: file,
+            job_callback_repo: job_callback,
             job_repo: job,
             share_repo: shares,
             settings_repo: settings,

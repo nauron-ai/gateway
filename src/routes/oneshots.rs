@@ -9,7 +9,7 @@ use axum::{
     response::IntoResponse,
     routing::post,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -17,6 +17,7 @@ use uuid::Uuid;
 pub(crate) use self::ingest_job::CreateIngestJobResponse;
 use self::ingest_job::{build_ingest_job_id, default_ingest_type_spec, validate_ingest_type_spec};
 use crate::auth::AuthUser;
+use crate::db::job_callbacks::JobCallbackUpsert;
 use crate::db::jobs::{JobEngine, JobSnapshotUpsert, JobStatus};
 use crate::error::GatewayError;
 use crate::inferencer::{
@@ -97,14 +98,6 @@ pub struct CreateIngestBody {
     pub language: Option<String>,
     pub metadata: Option<Value>,
     pub callback: Option<CallbackTarget>,
-}
-
-#[derive(Debug, Serialize)]
-struct IngestStartWithCallback {
-    #[serde(flatten)]
-    start: nauron_contracts::IngestStart,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    callback: Option<CallbackTarget>,
 }
 
 #[utoipa::path(
@@ -214,12 +207,17 @@ pub async fn create_ingest_job(
         metadata,
         submitted_at: Some(chrono::Utc::now()),
     };
-    let start_with_callback = IngestStartWithCallback { start, callback };
-    if let Err(err) = state
-        .ingest_publisher
-        .publish_json(job_id, &start_with_callback)
-        .await
-    {
+    if let Some(callback) = callback {
+        state
+            .job_callback_repo
+            .upsert(JobCallbackUpsert {
+                job_id,
+                url: callback.url,
+                secret: callback.secret,
+            })
+            .await?;
+    }
+    if let Err(err) = state.ingest_publisher.publish_json(job_id, &start).await {
         tracing::error!(job_id = %job_id, context_id, error = %err, "failed to publish ingest.start");
         return Err(err.into());
     }

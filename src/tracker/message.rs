@@ -15,6 +15,7 @@ use crate::db::files::FileRepository;
 use crate::db::jobs::{JobRecord, JobRepository};
 use crate::kafka::KafkaPublisher;
 use crate::metrics::GatewayMetrics;
+use crate::tracker::callback_dispatcher::TrackerCallbackDispatcher;
 
 use self::mir::handle_mir_event;
 use self::rdf::{handle_rdf_event, parse_rdf_event};
@@ -37,6 +38,7 @@ pub async fn handle_message(
     rdf_publisher: &KafkaPublisher,
     consumer: &StreamConsumer,
     metrics: &GatewayMetrics,
+    callback_dispatcher: &TrackerCallbackDispatcher,
     message: &BorrowedMessage<'_>,
 ) -> Result<(), TrackerError> {
     let payload = match message.payload_view::<str>() {
@@ -66,12 +68,12 @@ pub async fn handle_message(
         }
         TopicKind::Ingest => {
             if let Ok(event) = serde_json::from_str::<IngestEvent>(payload) {
-                handle_ingest_event(job_repo, metrics, event).await?;
+                handle_ingest_event(job_repo, metrics, callback_dispatcher, event).await?;
             }
         }
         TopicKind::Conditions => {
             if let Ok(event) = serde_json::from_str::<ConditionsEvaluateEvent>(payload) {
-                handle_conditions_event(job_repo, metrics, event).await?;
+                handle_conditions_event(job_repo, metrics, callback_dispatcher, event).await?;
             }
         }
     }

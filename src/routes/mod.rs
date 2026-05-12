@@ -10,6 +10,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{docs::GatewayApiDoc, state::AppState};
 
+pub(crate) mod callback_target;
 mod cors;
 mod download_headers;
 mod tracing;

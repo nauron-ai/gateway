@@ -7,15 +7,17 @@ use uuid::Uuid;
 use crate::db::jobs::{JobEngine, JobRecord, JobRepository, JobSnapshotUpsert, JobStatus};
 use crate::metrics::GatewayMetrics;
 use crate::tracker::TrackerError;
+use crate::tracker::callback_dispatcher::TrackerCallbackDispatcher;
 
 use super::lookup_job;
 
 pub(super) async fn handle_conditions_event(
     job_repo: &JobRepository,
     _metrics: &GatewayMetrics,
+    callback_dispatcher: &TrackerCallbackDispatcher,
     event: ConditionsEvaluateEvent,
 ) -> Result<(), TrackerError> {
-    match event {
+    match &event {
         ConditionsEvaluateEvent::Progress(progress) => {
             let current = lookup_job(job_repo, progress.job_id).await?;
             job_repo
@@ -23,17 +25,23 @@ pub(super) async fn handle_conditions_event(
                 .await?;
         }
         ConditionsEvaluateEvent::Result(result) => {
-            let current = lookup_job(job_repo, conditions_job_id(&result)).await?;
+            let current = lookup_job(job_repo, conditions_job_id(result)).await?;
             job_repo
                 .upsert_snapshot(build_conditions_result_upsert(result, &current)?)
                 .await?;
         }
     }
+    if let Err(err) = callback_dispatcher.dispatch_conditions(&event).await {
+        tracing::warn!(
+            error = %err,
+            "failed to deliver conditions callback from gateway tracker"
+        );
+    }
     Ok(())
 }
 
 fn build_conditions_progress_upsert(
-    progress: ConditionsEvaluateProgress,
+    progress: &ConditionsEvaluateProgress,
     current: &JobRecord,
 ) -> Result<JobSnapshotUpsert, TrackerError> {
     Ok(JobSnapshotUpsert {
@@ -57,10 +65,10 @@ fn build_conditions_progress_upsert(
 }
 
 fn build_conditions_result_upsert(
-    result: ConditionsEvaluateResult,
+    result: &ConditionsEvaluateResult,
     current: &JobRecord,
 ) -> Result<JobSnapshotUpsert, TrackerError> {
-    let (job_id, context_id, status, updated_at, message, result_json) = match &result {
+    let (job_id, context_id, status, updated_at, message, result_json) = match result {
         ConditionsEvaluateResult::Success {
             job_id,
             context_id,

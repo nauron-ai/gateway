@@ -109,6 +109,7 @@ use nauron_contracts::health::{ComponentStatus, HealthResponse, ServiceStatus};
             nauron_contracts::conditions::ConditionSpec,
             nauron_contracts::conditions::SeverityLevel,
             nauron_contracts::conditions::RiskLevel,
+            crate::routes::callback_target::CallbackTarget,
             crate::routes::settings::UserSettingsResponse,
             crate::routes::settings::UpdateUserSettingsRequest,
             crate::routes::shares::CreateShareRequest

@@ -4,15 +4,17 @@ use uuid::Uuid;
 use crate::db::jobs::{JobEngine, JobRecord, JobRepository, JobSnapshotUpsert, JobStatus};
 use crate::metrics::GatewayMetrics;
 use crate::tracker::TrackerError;
+use crate::tracker::callback_dispatcher::TrackerCallbackDispatcher;
 
 use super::lookup_job;
 
 pub(super) async fn handle_ingest_event(
     job_repo: &JobRepository,
     _metrics: &GatewayMetrics,
+    callback_dispatcher: &TrackerCallbackDispatcher,
     event: IngestEvent,
 ) -> Result<(), TrackerError> {
-    match event {
+    match &event {
         IngestEvent::Progress(progress) => {
             let current = lookup_job(job_repo, progress.job_id).await?;
             job_repo
@@ -20,17 +22,23 @@ pub(super) async fn handle_ingest_event(
                 .await?;
         }
         IngestEvent::Result(result) => {
-            let current = lookup_job(job_repo, ingest_job_id(&result)).await?;
+            let current = lookup_job(job_repo, ingest_job_id(result)).await?;
             job_repo
                 .upsert_snapshot(build_ingest_result_upsert(result, &current)?)
                 .await?;
         }
     }
+    if let Err(err) = callback_dispatcher.dispatch_ingest(&event).await {
+        tracing::warn!(
+            error = %err,
+            "failed to deliver ingest callback from gateway tracker"
+        );
+    }
     Ok(())
 }
 
 fn build_ingest_progress_upsert(
-    progress: IngestProgress,
+    progress: &IngestProgress,
     current: &JobRecord,
 ) -> Result<JobSnapshotUpsert, TrackerError> {
     Ok(JobSnapshotUpsert {
@@ -54,10 +62,10 @@ fn build_ingest_progress_upsert(
 }
 
 fn build_ingest_result_upsert(
-    result: IngestResult,
+    result: &IngestResult,
     current: &JobRecord,
 ) -> Result<JobSnapshotUpsert, TrackerError> {
-    let (job_id, context_id, status, updated_at, message) = match &result {
+    let (job_id, context_id, status, updated_at, message) = match result {
         IngestResult::Success {
             job_id,
             context_id,
@@ -100,7 +108,7 @@ fn build_ingest_result_upsert(
         stage_progress_total: None,
         stage_progress_pct: None,
         message,
-        result_json: Some(serde_json::to_value(&result)?),
+        result_json: Some(serde_json::to_value(result)?),
         updated_at,
     })
 }

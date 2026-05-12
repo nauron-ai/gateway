@@ -53,6 +53,8 @@ pub enum TrackerError {
     Serialization(#[from] serde_json::Error),
     #[error("publisher error: {0}")]
     Publisher(#[from] crate::kafka::KafkaError),
+    #[error("callback delivery error: {0}")]
+    Callback(#[from] reqwest::Error),
     #[error("job not registered: {0}")]
     UnknownJob(String),
     #[error("stage parse error: {0}")]

@@ -1,3 +1,4 @@
+mod callback_dispatcher;
 mod consumer;
 mod message;
 mod propagate;
@@ -13,6 +14,7 @@ use uuid::Uuid;
 
 use crate::config::AppConfig;
 use crate::db::files::FileRepository;
+use crate::db::job_callbacks::JobCallbackRepository;
 use crate::db::jobs::{JobEngine, JobRepository, JobSnapshotUpsert, JobStatus};
 use crate::job_mode::JobLaunchMode;
 use crate::kafka::KafkaPublisher;
@@ -35,6 +37,7 @@ impl JobTracker {
     pub async fn spawn(
         config: &AppConfig,
         job_repo: JobRepository,
+        job_callback_repo: JobCallbackRepository,
         file_repo: FileRepository,
         rdf_publisher: KafkaPublisher,
         metrics: Arc<GatewayMetrics>,
@@ -62,6 +65,9 @@ impl JobTracker {
         let tracker = Self {
             job_repo: job_repo.clone(),
         };
+        let callback_dispatcher = Arc::new(callback_dispatcher::TrackerCallbackDispatcher::new(
+            job_callback_repo,
+        )?);
         tracker.start_background(
             consumer,
             job_repo,
@@ -69,6 +75,7 @@ impl JobTracker {
             rdf_publisher,
             metrics,
             topics,
+            callback_dispatcher,
         );
         Ok(tracker)
     }
@@ -81,6 +88,7 @@ impl JobTracker {
         rdf_publisher: KafkaPublisher,
         metrics: Arc<GatewayMetrics>,
         topics: Arc<TrackerTopics>,
+        callback_dispatcher: Arc<callback_dispatcher::TrackerCallbackDispatcher>,
     ) {
         tokio::spawn(async move {
             let mut stream = consumer.stream();
@@ -97,6 +105,7 @@ impl JobTracker {
                                 &rdf_publisher,
                                 &consumer,
                                 &metrics,
+                                callback_dispatcher.as_ref(),
                                 &message,
                             )
                             .await

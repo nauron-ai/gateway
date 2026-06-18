@@ -8,7 +8,7 @@ rust-version = "1.95"
 [dependencies]
 axum = { version = "0.8", features = ["macros", "multipart"] }
 aws-config = { version = "1.5.3", default-features = false, features = ["rt-tokio"] }
-aws-sdk-s3 = { version = "1.113.0", default-features = false, features = ["rustls", "rt-tokio"] }
+aws-sdk-s3 = { version = "1.123.0", default-features = false, features = ["rustls", "rt-tokio"] }
 bytes = "1.7"
 chrono = { version = "0.4.38", default-features = false, features = ["clock"] }
 clap = { version = "4.5.7", features = ["derive", "env"] }

@@ -17,7 +17,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: Checkout gateway (PR head)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Install Rust toolchain
@@ -47,7 +47,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: Checkout gateway (PR head)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Docker Buildx

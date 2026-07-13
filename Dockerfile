@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM rust:1.95.0-slim-bookworm AS builder
+FROM rust:1.97.0-slim-bookworm AS builder
 
 ENV CARGO_HOME=/workspace/.app_cache/cargo \
     CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse \
